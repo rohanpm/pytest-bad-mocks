@@ -29,4 +29,3 @@ def format_stack(stack):
             break
         out.append('  %s:%s' % (filename, line))
     return '\n'.join(out)
-

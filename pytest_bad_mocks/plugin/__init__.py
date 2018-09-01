@@ -1,6 +1,5 @@
 import pytest
 
-import _pytest
 from _pytest.outcomes import fail
 
 from pytest_bad_mocks.mock_spy import MockSpy
@@ -18,7 +17,7 @@ from .report import repr_bad_mocks
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_protocol(item, nextitem):
+def pytest_runtest_protocol(item, nextitem):  # noqa pylint: disable=unused-argument
     """Hook wrapping test running to start/stop mock spy."""
     MockSpy.start()
     try:
@@ -28,7 +27,7 @@ def pytest_runtest_protocol(item, nextitem):
 
 
 @pytest.hookimpl(trylast=True, hookwrapper=True)
-def pytest_pyfunc_call(pyfuncitem):
+def pytest_pyfunc_call(pyfuncitem):  # noqa pylint: disable=unused-argument
     """Hook wrapping test function execution to check mocks
     at the end of a passed test.
     """
@@ -47,33 +46,3 @@ def pytest_pyfunc_call(pyfuncitem):
         return
 
     fail(repr_bad_mocks(bad_mocks))
-
-
-def repr_bad_mocks(mock_descriptors):
-    if len(mock_descriptors) == 1:
-        mock_str = 'Mock'
-        was_str = 'was'
-    else:
-        mock_str = '%s mocks' % len(mock_descriptors)
-        was_str = 'were'
-
-    header = '%s created within test %s not used' % (mock_str, was_str)
-    out = [header]
-
-    for ds in mock_descriptors:
-        out.append('')
-        out.append('Mock created at:')
-        out.append(format_stack(ds.stack))
-
-    return '\n'.join(out)
-
-
-def format_stack(stack):
-    out = []
-    for elem in stack:
-        (frame, filename, line, fn, context_lines, context_line) = elem
-        if filename.startswith(os.path.dirname(_pytest.__file__)):
-            break
-        out.append('  %s:%s' % (filename, line))
-    return '\n'.join(out)
-

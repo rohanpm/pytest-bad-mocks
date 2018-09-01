@@ -17,12 +17,7 @@ _CALL_ATTRIBUTES = [
 def nospy(fn):
     @wraps(fn)
     def out(*args, **kwargs):
-        old_active = MockSpy._ACTIVE
-        MockSpy._ACTIVE = False
-        try:
-            return fn(*args, **kwargs)
-        finally:
-            MockSpy._ACTIVE = old_active
+        return MockSpy.suspended(fn, *args, **kwargs)
     return out
 
 
@@ -60,7 +55,7 @@ class MockSpy(object):
             spy.spy_getattribute(name)
 
     @classmethod
-    def class_spy_get_child_mock(cls, parent, child):
+    def class_spy_get_child_mock(cls, _parent, child):
         if not cls._ACTIVE:
             return
         spy = cls.spy_for_mock(child)
@@ -116,9 +111,9 @@ class MockSpy(object):
                 return spy
 
     @classmethod
-    def _new_mock(cls, mock_cls, *args, **kwargs):
+    def _new_mock(cls, mock_cls, *_args, **_kwargs):
         mock_cls = cls._mock_subclass(mock_cls)
-        return object.__new__(mock_cls, *args, **kwargs)
+        return object.__new__(mock_cls)
 
     @classmethod
     def _mock_subclass(cls, base):
@@ -139,15 +134,22 @@ class MockSpy(object):
                 cls.class_spy_getattribute(self, name)
 
         def _get_child_mock(self, *args, **kwargs):
-            child = base._get_child_mock(self, *args, **kwargs)
+            child = base._get_child_mock(self, *args, **kwargs)  # pylint: disable=protected-access
             cls.class_spy_get_child_mock(self, child)
             return child
 
         name = base.__name__ + 'Spy'
-        klass = type(name, (base,),
-            {'__init__': __init__,
-             '__getattribute__': __getattribute__,
-             '_get_child_mock': _get_child_mock})
+        klass_dict = {'__init__': __init__,
+                      '__getattribute__': __getattribute__,
+                      '_get_child_mock': _get_child_mock}
+        klass = type(name, (base,), klass_dict)
         return klass
 
-
+    @classmethod
+    def suspended(cls, fn, *args, **kwargs):
+        old_active = cls._ACTIVE
+        cls._ACTIVE = False
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            cls._ACTIVE = old_active

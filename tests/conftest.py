@@ -1,4 +1,4 @@
-from mock import MagicMock, Mock
+from mock import MagicMock
 import pytest
 
 
@@ -6,4 +6,3 @@ import pytest
 def mock_fixture():
     mock = MagicMock()
     yield mock
-

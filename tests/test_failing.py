@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from mock import MagicMock
 import pytest
 
@@ -14,9 +16,10 @@ def test_failing_via_mock(mock_fixture):
 
 def test_useless_mock():
     m = MagicMock()
+    print(id(m))
     assert 1+1 == 2
 
 
 def test_useless_mock_from_fixture(mock_fixture):
+    print(id(mock_fixture))
     assert 1+1 == 2
-
