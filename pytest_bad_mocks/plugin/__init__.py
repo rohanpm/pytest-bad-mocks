@@ -1,39 +1,41 @@
-import logging
-import sys
 import pytest
-import inspect
-import os
 
 import _pytest
-from _pytest._code import ExceptionInfo
+from _pytest.outcomes import fail
 
-from _pytest.runner import TestReport
-from pytest_bad_mocks.mocks import check_mocks
-from pytest_bad_mocks.plugin.mock_spy import MockSpy
+from pytest_bad_mocks.mock_spy import MockSpy
+
+from .report import repr_bad_mocks
 
 
-_LOG = logging.getLogger('pytest-bad-mocks')
-
-logging.basicConfig(level=logging.DEBUG)
-
+# Hooks invoked by pytest.
+#
+# The reason why we have both pytest_runtest_protocol
+# and pytest_pyfunc_call here is so that pytest_runtest_protocol
+# sets up the mock spy before any fixtures are created, and
+# pytest_pyfunc_call does the mock check inside of the xfail
+# hook so that xfails apply to the check.
 
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_protocol(item, nextitem):
+    """Hook wrapping test running to start/stop mock spy."""
     MockSpy.start()
+    try:
+        yield
+    finally:
+        MockSpy.stop()
 
-    yield
 
-    MockSpy.stop()
+@pytest.hookimpl(trylast=True, hookwrapper=True)
+def pytest_pyfunc_call(pyfuncitem):
+    """Hook wrapping test function execution to check mocks
+    at the end of a passed test.
+    """
+    outcome = yield
 
-
-def pytest_runtest_makereport(item, call):
-    if call.when != 'call':
-        # report for setup/teardown => don't check
-        return
-
-    if call.excinfo:
-        # test already raised an exception => don't bother with our check
+    if outcome.excinfo:
+        # Test already failed for other reasons => no mock check
         return
 
     bad_mocks = []
@@ -44,24 +46,7 @@ def pytest_runtest_makereport(item, call):
     if not bad_mocks:
         return
 
-    import pdb; pdb.set_trace()
-    when = call.when
-    duration = call.stop - call.start
-    keywords = {x: 1 for x in item.keywords}
-    sections = []
-    outcome = "failed"
-    longrepr = repr_bad_mocks(bad_mocks)
-    return TestReport(
-        item.nodeid,
-        item.location,
-        keywords,
-        outcome,
-        longrepr,
-        when,
-        sections,
-        duration,
-        user_properties=item.user_properties,
-    )
+    fail(repr_bad_mocks(bad_mocks))
 
 
 def repr_bad_mocks(mock_descriptors):

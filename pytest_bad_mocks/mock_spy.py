@@ -28,6 +28,7 @@ def nospy(fn):
 
 class MockSpy(object):
     _ALL = []
+    _NEW_FN = {}
     _SPY_CLASSES = {}
 
     def __init__(self, mock):
@@ -82,7 +83,9 @@ class MockSpy(object):
             # so it counts as used
             return True
         if self.is_child:
-            # The mock was not called, 
+            # The mock was not called, but this mock is the child of
+            # another (e.g. created as a MagicMock return value),
+            # so it counts as used
             return True
 
     @classmethod
@@ -104,7 +107,7 @@ class MockSpy(object):
     def stop(cls):
         cls._ACTIVE = False
         mock = sys.modules.get('mock')
-        setattr(mock.Mock, '__new__', None)
+        delattr(mock.Mock, '__new__')
 
     @classmethod
     def spy_for_mock(cls, mock):
