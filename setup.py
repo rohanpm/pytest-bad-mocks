@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 
 def get_description():
-    return 'A library of composable Python executors'
+    return 'A pytest plugin to detect unused mocks'
 
 
 def get_long_description():
