@@ -22,7 +22,7 @@ def get_long_description():
 
 setup(
     name="pytest-bad-mocks",
-    version='1.0.0.dev0',
+    version='1.0.0',
     author='Rohan McGovern',
     author_email='rohan@mcgovern.id.au',
     url='https://github.com/rohanpm/pytest-bad-mocks',
