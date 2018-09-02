@@ -50,8 +50,10 @@ def tag(version):
 
 
 def upload():
+    check_call(['/bin/sh', '-c', 'rm -f dist/*'])
     check_call([sys.executable or 'python', 'setup.py',
-                'sdist', 'bdist_wheel', 'upload', '--sign'])
+                'sdist', 'bdist_wheel'])
+    check_call(['/bin/sh', '-c', 'twine upload --sign dist/*'])
 
 
 def push(release_version):
