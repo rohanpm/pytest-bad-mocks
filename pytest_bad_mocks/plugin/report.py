@@ -1,5 +1,5 @@
 import os
-import _pytest
+import pytest
 
 
 def repr_bad_mocks(mock_spies):
@@ -25,7 +25,7 @@ def format_stack(stack):
     out = []
     for elem in stack:
         (_, filename, line, _, _, _) = elem
-        if filename.startswith(os.path.dirname(_pytest.__file__)):
+        if filename.startswith(os.path.dirname(pytest.__file__)):
             break
         out.append('  %s:%s' % (filename, line))
     return '\n'.join(out)

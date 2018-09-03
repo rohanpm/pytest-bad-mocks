@@ -1,7 +1,5 @@
 import pytest
 
-from _pytest.outcomes import fail
-
 from pytest_bad_mocks.mock_spy import MockSpy
 
 from .report import repr_bad_mocks
@@ -45,4 +43,4 @@ def pytest_pyfunc_call(pyfuncitem):  # noqa pylint: disable=unused-argument
     if not bad_mocks:
         return
 
-    fail(repr_bad_mocks(bad_mocks))
+    pytest.fail(repr_bad_mocks(bad_mocks))
